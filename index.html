@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="ar" dir="rtl" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>نظام إدارة الطلاب</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    * {
+      font-family: 'Tajawal', sans-serif;
+    }
+    .gold-row { background: linear-gradient(135deg, #ffd700 0%, #ffec80 100%); }
+    .green-row { background: linear-gradient(135deg, #22c55e 0%, #4ade80 100%); }
+    .red-row { background: linear-gradient(135deg, #ef4444 0%, #f87171 100%); }
+    .modal-overlay {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+    }
+    .table-container::-webkit-scrollbar {
+      height: 8px;
+    }
+    .table-container::-webkit-scrollbar-track {
+      background: #1e293b;
+      border-radius: 4px;
+    }
+    .table-container::-webkit-scrollbar-thumb {
+      background: #6366f1;
+      border-radius: 4px;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .modal-content { animation: slideIn 0.3s ease-out; }
+    .modal-overlay { animation: fadeIn 0.2s ease-out; }
+    .toast {
+      animation: slideIn 0.3s ease-out;
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-slate-900 text-white overflow-auto">
+  <div class="min-h-full w-full p-4 md:p-8"><!-- Header -->
+   <header class="text-center mb-8">
+    <h1 id="appTitle" class="text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">نظام إدارة الطلاب</h1>
+    <p class="text-slate-400 text-sm md:text-base">إدارة وتتبع أداء الطلاب بكل سهولة</p>
+   </header><!-- Action Buttons -->
+   <div class="flex flex-wrap justify-center gap-3 mb-8"><button id="addStudentBtn" class="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 px-5 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-105">
+     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+     </svg> إضافة طالب </button> <button id="addBonusBtn" class="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-5 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 hover:scale-105">
+     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+     </svg> إضافة بونص </button> <button id="deleteAllBtn" class="flex items-center gap-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 px-5 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg shadow-red-500/30 hover:shadow-red-500/50 hover:scale-105">
+     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+     </svg> حذف الكل </button>
+   </div><!-- Stats Cards -->
+   <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 max-w-4xl mx-auto">
+    <div class="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-xl p-4 text-center">
+     <div id="totalStudents" class="text-2xl md:text-3xl font-bold text-indigo-400">
+      0
+     </div>
+     <div class="text-slate-400 text-sm">
+      إجمالي الطلاب
+     </div>
+    </div>
+    <div class="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-xl p-4 text-center">
+     <div id="excellentStudents" class="text-2xl md:text-3xl font-bold text-yellow-400">
+      0
+     </div>
+     <div class="text-slate-400 text-sm">
+      ممتاز (90+)
+     </div>
+    </div>
+    <div class="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-xl p-4 text-center">
+     <div id="passedStudents" class="text-2xl md:text-3xl font-bold text-green-400">
+      0
+     </div>
+     <div class="text-slate-400 text-sm">
+      ناجح (50-89)
+     </div>
+    </div>
+    <div class="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-xl p-4 text-center">
+     <div id="failedStudents" class="text-2xl md:text-3xl font-bold text-red-400">
+      0
+     </div>
+     <div class="text-slate-400 text-sm">
+      راسب (-50)
+     </div>
+    </div>
+   </div><!-- Table Container -->
+   <div class="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-2xl overflow-hidden max-w-6xl mx-auto">
+    <div class="table-container overflow-x-auto">
+     <table class="w-full min-w-[800px]">
+      <thead>
+       <tr class="bg-slate-700/50">
+        <th class="px-4 py-4 text-right font-bold text-indigo-300">الرقم</th>
+        <th class="px-4 py-4 text-right font-bold text-indigo-300">الاسم</th>
+        <th class="px-4 py-4 text-right font-bold text-indigo-300">الحضور</th>
+        <th class="px-4 py-4 text-right font-bold text-indigo-300">نصف العام</th>
+        <th class="px-4 py-4 text-right font-bold text-indigo-300">النهائي</th>
+        <th class="px-4 py-4 text-right font-bold text-indigo-300">متوسط المهام</th>
+        <th class="px-4 py-4 text-right font-bold text-indigo-300">المجموع</th>
+        <th class="px-4 py-4 text-right font-bold text-indigo-300">البونص</th>
+        <th class="px-4 py-4 text-right font-bold text-indigo-300">الدرجة النهائية</th>
+       </tr>
+      </thead>
+      <tbody id="displayData"><!-- Students will be added here -->
+      </tbody>
+     </table>
+    </div>
+    <div id="emptyState" class="hidden text-center py-12 text-slate-400">
+     <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+     </svg>
+     <p class="text-lg">لا يوجد طلاب حتى الآن</p>
+     <p class="text-sm">اضغط على "إضافة طالب" للبدء</p>
+    </div>
+   </div><!-- Toast Container -->
+   <div id="toastContainer" class="fixed top-4 left-4 right-4 md:left-auto md:right-4 md:w-80 z-50 flex flex-col gap-2"></div><!-- Add Student Modal -->
+   <div id="addStudentModal" class="fixed inset-0 z-40 hidden">
+    <div class="modal-overlay absolute inset-0" onclick="closeModal('addStudentModal')"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+     <div class="modal-content bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-md relative"><button onclick="closeModal('addStudentModal')" class="absolute top-4 left-4 text-slate-400 hover:text-white transition-colors">
+       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+       </svg></button>
+      <h2 class="text-xl font-bold mb-6 text-indigo-300">إضافة طالب جديد</h2>
+      <form id="addStudentForm" class="space-y-4">
+       <div><label for="studentId" class="block text-sm font-medium text-slate-300 mb-1">رقم الطالب</label> <input type="text" id="studentId" required class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="أدخل رقم الطالب">
+       </div>
+       <div><label for="studentName" class="block text-sm font-medium text-slate-300 mb-1">اسم الطالب</label> <input type="text" id="studentName" required class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="أدخل اسم الطالب">
+       </div>
+       <div><label for="attendPerc" class="block text-sm font-medium text-slate-300 mb-1">نسبة الحضور (%)</label> <input type="number" id="attendPerc" required min="0" max="100" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="مثال: 85">
+       </div>
+       <div class="grid grid-cols-2 gap-4">
+        <div><label for="midTerm" class="block text-sm font-medium text-slate-300 mb-1">درجة نصف العام</label> <input type="number" id="midTerm" required min="0" max="100" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="0-100">
+        </div>
+        <div><label for="final" class="block text-sm font-medium text-slate-300 mb-1">درجة النهائي</label> <input type="number" id="final" required min="0" max="100" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="0-100">
+        </div>
+       </div>
+       <div><label for="avgTasks" class="block text-sm font-medium text-slate-300 mb-1">متوسط المهام</label> <input type="number" id="avgTasks" required min="0" max="100" step="0.1" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="مثال: 75.5">
+       </div><button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 py-3 rounded-xl font-bold transition-all duration-300"> إضافة الطالب </button>
+      </form>
+     </div>
+    </div>
+   </div><!-- Add Bonus Modal -->
+   <div id="addBonusModal" class="fixed inset-0 z-40 hidden">
+    <div class="modal-overlay absolute inset-0" onclick="closeModal('addBonusModal')"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+     <div class="modal-content bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-md relative"><button onclick="closeModal('addBonusModal')" class="absolute top-4 left-4 text-slate-400 hover:text-white transition-colors">
+       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+       </svg></button>
+      <h2 class="text-xl font-bold mb-6 text-amber-400">إضافة بونص</h2>
+      <form id="addBonusForm" class="space-y-4">
+       <div><label for="bonusStudentId" class="block text-sm font-medium text-slate-300 mb-1">رقم الطالب</label> <input type="text" id="bonusStudentId" required class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" placeholder="أدخل رقم الطالب">
+       </div>
+       <div><label for="bonusAmount" class="block text-sm font-medium text-slate-300 mb-1">قيمة البونص</label> <input type="number" id="bonusAmount" required min="1" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" placeholder="أدخل قيمة البونص">
+       </div><button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 py-3 rounded-xl font-bold transition-all duration-300"> إضافة البونص </button>
+      </form>
+     </div>
+    </div>
+   </div><!-- Confirm Delete Modal -->
+   <div id="confirmDeleteModal" class="fixed inset-0 z-40 hidden">
+    <div class="modal-overlay absolute inset-0" onclick="closeModal('confirmDeleteModal')"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+     <div class="modal-content bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-sm relative text-center">
+      <svg class="w-16 h-16 mx-auto mb-4 text-red-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+      </svg>
+      <h2 class="text-xl font-bold mb-2 text-white">تأكيد الحذف</h2>
+      <p class="text-slate-400 mb-6">هل أنت متأكد من حذف جميع الطلاب؟ لا يمكن التراجع عن هذا الإجراء.</p>
+      <div class="flex gap-3"><button onclick="closeModal('confirmDeleteModal')" class="flex-1 bg-slate-700 hover:bg-slate-600 py-3 rounded-xl font-bold transition-all duration-300"> إلغاء </button> <button onclick="confirmDeleteAll()" class="flex-1 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 py-3 rounded-xl font-bold transition-all duration-300"> حذف الكل </button>
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    // Config
+    const defaultConfig = {
+      app_title: 'نظام إدارة الطلاب',
+      background_color: '#0f172a',
+      surface_color: '#1e293b',
+      text_color: '#ffffff',
+      primary_color: '#6366f1',
+      accent_color: '#f59e0b'
+    };
+
+    let config = { ...defaultConfig };
+
+    // Initialize Element SDK
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (newConfig) => {
+          config = { ...defaultConfig, ...newConfig };
+          document.getElementById('appTitle').textContent = config.app_title || defaultConfig.app_title;
+          document.body.style.backgroundColor = config.background_color || defaultConfig.background_color;
+        },
+        mapToCapabilities: (cfg) => ({
+          recolorables: [
+            {
+              get: () => cfg.background_color || defaultConfig.background_color,
+              set: (v) => { cfg.background_color = v; window.elementSdk.setConfig({ background_color: v }); }
+            },
+            {
+              get: () => cfg.surface_color || defaultConfig.surface_color,
+              set: (v) => { cfg.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); }
+            },
+            {
+              get: () => cfg.text_color || defaultConfig.text_color,
+              set: (v) => { cfg.text_color = v; window.elementSdk.setConfig({ text_color: v }); }
+            },
+            {
+              get: () => cfg.primary_color || defaultConfig.primary_color,
+              set: (v) => { cfg.primary_color = v; window.elementSdk.setConfig({ primary_color: v }); }
+            },
+            {
+              get: () => cfg.accent_color || defaultConfig.accent_color,
+              set: (v) => { cfg.accent_color = v; window.elementSdk.setConfig({ accent_color: v }); }
+            }
+          ],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (cfg) => new Map([
+          ['app_title', cfg.app_title || defaultConfig.app_title]
+        ])
+      });
+    }
+
+    // Student Storage
+    const table = document.getElementById("displayData");
+    let studentsStorage = JSON.parse(localStorage.getItem("students")) || [];
+
+    // Toast Notifications
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      const colors = {
+        success: 'bg-green-600',
+        error: 'bg-red-600',
+        warning: 'bg-amber-600'
+      };
+      toast.className = `toast ${colors[type]} text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2`;
+      const icons = {
+        success: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>',
+        error: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>',
+        warning: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>'
+      };
+      toast.innerHTML = `${icons[type]}<span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // Modal Functions
+    function openModal(modalId) {
+      document.getElementById(modalId).classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+      document.body.style.overflow = 'auto';
+    }
+
+    // Update Stats
+    function updateStats() {
+      const total = studentsStorage.length;
+      const excellent = studentsStorage.filter(s => s.endDeg >= 90).length;
+      const passed = studentsStorage.filter(s => s.endDeg >= 50 && s.endDeg < 90).length;
+      const failed = studentsStorage.filter(s => s.endDeg < 50).length;
+
+      document.getElementById('totalStudents').textContent = total;
+      document.getElementById('excellentStudents').textContent = excellent;
+      document.getElementById('passedStudents').textContent = passed;
+      document.getElementById('failedStudents').textContent = failed;
+
+      document.getElementById('emptyState').classList.toggle('hidden', total > 0);
+    }
+
+    // Get Row Class
+    function getRowClass(endDeg) {
+      if (endDeg >= 90) return 'gold-row';
+      if (endDeg >= 50) return 'green-row';
+      return 'red-row';
+    }
+
+    // Add Student
+    function addStudent({ id, name, AttendPerc, midTerm, Final, avgTasks, totalDeg, Bonus, endDeg }) {
+      const isHere = studentsStorage.some(e => e.id === id);
+      
+      if (isHere) {
+        showToast('هذا الرقم موجود بالفعل!', 'error');
+        return false;
+      }
+
+      if (midTerm + Final > 100) {
+        showToast('مجموع درجات نصف العام والنهائي يتجاوز 100!', 'error');
+        return false;
+      }
+
+      studentsStorage.push({ id, name, AttendPerc, midTerm, Final, avgTasks, totalDeg, Bonus, endDeg });
+      localStorage.setItem("students", JSON.stringify(studentsStorage));
+
+      const tr = document.createElement("tr");
+      tr.className = `${getRowClass(endDeg)} transition-all duration-300`;
+      tr.dataset.id = id;
+      tr.innerHTML = `
+        <td class="px-4 py-3 font-medium">${id}</td>
+        <td class="px-4 py-3">${name}</td>
+        <td class="px-4 py-3">${AttendPerc}</td>
+        <td class="px-4 py-3">${midTerm}</td>
+        <td class="px-4 py-3">${Final}</td>
+        <td class="px-4 py-3">${avgTasks}</td>
+        <td class="px-4 py-3">${totalDeg}</td>
+        <td class="px-4 py-3 bonus-cell">${Bonus}</td>
+        <td class="px-4 py-3 font-bold end-deg-cell">${endDeg}</td>
+      `;
+      table.appendChild(tr);
+      updateStats();
+      showToast('تم إضافة الطالب بنجاح!', 'success');
+      return true;
+    }
+
+    // Add Bonus
+    function addBonus(id, bonusAmount) {
+      const student = studentsStorage.find(e => e.id === id);
+      
+      if (!student) {
+        showToast('الطالب غير موجود!', 'error');
+        return false;
+      }
+
+      const newBonus = parseInt(bonusAmount);
+      
+      if (student.endDeg + newBonus > 100) {
+        showToast('البونص يجعل الدرجة النهائية تتجاوز 100!', 'error');
+        return false;
+      }
+
+      student.Bonus += newBonus;
+      student.endDeg += newBonus;
+      localStorage.setItem("students", JSON.stringify(studentsStorage));
+
+      const row = document.querySelector(`tr[data-id="${id}"]`);
+      if (row) {
+        row.querySelector('.bonus-cell').textContent = student.Bonus;
+        row.querySelector('.end-deg-cell').textContent = student.endDeg;
+        row.className = `${getRowClass(student.endDeg)} transition-all duration-300`;
+      }
+
+      updateStats();
+      showToast(`تم إضافة ${newBonus} بونص للطالب بنجاح!`, 'success');
+      return true;
+    }
+
+    // Display All Students
+    function displayAllStudents() {
+      table.innerHTML = '';
+      studentsStorage.forEach(student => {
+        const tr = document.createElement("tr");
+        tr.className = `${getRowClass(student.endDeg)} transition-all duration-300`;
+        tr.dataset.id = student.id;
+        tr.innerHTML = `
+          <td class="px-4 py-3 font-medium">${student.id}</td>
+          <td class="px-4 py-3">${student.name}</td>
+          <td class="px-4 py-3">${student.AttendPerc}</td>
+          <td class="px-4 py-3">${student.midTerm}</td>
+          <td class="px-4 py-3">${student.Final}</td>
+          <td class="px-4 py-3">${student.avgTasks}</td>
+          <td class="px-4 py-3">${student.totalDeg}</td>
+          <td class="px-4 py-3 bonus-cell">${student.Bonus}</td>
+          <td class="px-4 py-3 font-bold end-deg-cell">${student.endDeg}</td>
+        `;
+        table.appendChild(tr);
+      });
+      updateStats();
+    }
+
+    // Delete All
+    function confirmDeleteAll() {
+      localStorage.removeItem("students");
+      studentsStorage = [];
+      table.innerHTML = '';
+      updateStats();
+      closeModal('confirmDeleteModal');
+      showToast('تم حذف جميع الطلاب!', 'warning');
+    }
+
+    // Event Listeners
+    document.getElementById('addStudentBtn').addEventListener('click', () => openModal('addStudentModal'));
+    document.getElementById('addBonusBtn').addEventListener('click', () => openModal('addBonusModal'));
+    document.getElementById('deleteAllBtn').addEventListener('click', () => openModal('confirmDeleteModal'));
+
+    document.getElementById('addStudentForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('studentId').value.trim();
+      const name = document.getElementById('studentName').value.trim();
+      const AttendPerc = document.getElementById('attendPerc').value + '%';
+      const midTerm = parseInt(document.getElementById('midTerm').value);
+      const Final = parseInt(document.getElementById('final').value);
+      const avgTasks = document.getElementById('avgTasks').value;
+
+      if (!id || !name || isNaN(midTerm) || isNaN(Final)) {
+        showToast('يرجى ملء جميع الحقول بشكل صحيح!', 'error');
+        return;
+      }
+
+      const totalDeg = midTerm + Final;
+      const Bonus = 0;
+      const endDeg = totalDeg;
+
+      const success = addStudent({ id, name, AttendPerc, midTerm, Final, avgTasks, totalDeg, Bonus, endDeg });
+      
+      if (success) {
+        document.getElementById('addStudentForm').reset();
+        closeModal('addStudentModal');
+      }
+    });
+
+    document.getElementById('addBonusForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('bonusStudentId').value.trim();
+      const bonusAmount = document.getElementById('bonusAmount').value;
+
+      if (!id || !bonusAmount) {
+        showToast('يرجى ملء جميع الحقول!', 'error');
+        return;
+      }
+
+      const success = addBonus(id, bonusAmount);
+      
+      if (success) {
+        document.getElementById('addBonusForm').reset();
+        closeModal('addBonusModal');
+      }
+    });
+
+    // Initialize
+    displayAllStudents();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bb4cbcaf04be191',t:'MTc2Nzk3MDc0MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
